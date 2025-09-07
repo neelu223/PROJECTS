@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>🌟 Random Quote Generator</title>
+  <style>
+    body {
+      margin: 0;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      font-family: "Segoe UI", sans-serif;
+      color: #fff;
+    }
+
+    .container {
+      background: rgba(0,0,0,0.4);
+      padding: 30px;
+      border-radius: 15px;
+      text-align: center;
+      width: 420px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+      backdrop-filter: blur(6px);
+    }
+
+    h1 {
+      font-size: 1.8em;
+      margin-bottom: 20px;
+      text-shadow: 0 0 10px rgba(0,0,0,0.4);
+    }
+
+    #quote {
+      font-size: 1.2em;
+      margin: 20px 0;
+      font-style: italic;
+      min-height: 60px;
+    }
+
+    .buttons {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    button {
+      padding: 10px 15px;
+      border: none;
+      border-radius: 8px;
+      background: #ffdd57;
+      color: #333;
+      font-size: 0.9em;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+
+    button:hover {
+      background: #ffcc00;
+    }
+
+    /* Quote animation */
+    .fade-in {
+      opacity: 0;
+      transform: translateY(20px);
+      animation: fadeIn 0.6s forwards;
+    }
+
+    @keyframes fadeIn {
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+</head>
+<body>
+  <div class="container" id="quote-container">
+    <h1>✨ Random Quote Generator</h1>
+    <div id="quote">Click the button for inspiration!</div>
+
+    <div class="buttons">
+      <button onclick="newQuote()">New Quote</button>
+      <button onclick="shareTwitter()">Twitter</button>
+      <button onclick="shareWhatsApp()">WhatsApp</button>
+      <button onclick="shareInstagram()">Instagram</button>
+      <button onclick="downloadImage()">Download</button>
+    </div>
+  </div>
+
+  <script>
+    // Random background gradient
+    function randomGradient() {
+      const colors = [
+        "#667eea", "#764ba2", "#ff6a00", "#ee0979", "#00c6ff",
+        "#f7971e", "#56ab2f", "#a8ff78", "#ff416c", "#ff4b2b"
+      ];
+      const c1 = colors[Math.floor(Math.random() * colors.length)];
+      const c2 = colors[Math.floor(Math.random() * colors.length)];
+      return `linear-gradient(135deg, ${c1}, ${c2})`;
+    }
+
+    const apis = [
+      "https://api.quotable.io/random", 
+      "https://zenquotes.io/api/random",
+      "https://api.adviceslip.com/advice"
+    ];
+
+    async function newQuote() {
+      let quoteText = "";
+      let authorText = "";
+
+      for (let api of apis) {
+        try {
+          const res = await fetch(api);
+          const data = await res.json();
+
+          if (api.includes("quotable")) {
+            quoteText = data.content;
+            authorText = data.author;
+          } else if (api.includes("zenquotes")) {
+            quoteText = data[0].q;
+            authorText = data[0].a;
+          } else if (api.includes("adviceslip")) {
+            quoteText = data.slip.advice;
+            authorText = "Unknown";
+          }
+          break; // stop if success
+        } catch (err) {
+          console.warn(`API failed: ${api}`);
+        }
+      }
+
+      if (!quoteText) {
+        quoteText = "⚠️ Could not load a quote. Try again!";
+        authorText = "";
+      }
+
+      const quoteElement = document.getElementById("quote");
+      quoteElement.classList.remove("fade-in");
+      void quoteElement.offsetWidth; // restart animation
+      quoteElement.innerText = `"${quoteText}" — ${authorText}`;
+      quoteElement.classList.add("fade-in");
+
+      document.body.style.background = randomGradient();
+    }
+
+    function shareTwitter() {
+      const text = document.getElementById("quote").innerText;
+      const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`;
+      window.open(twitterUrl, "_blank");
+    }
+
+    function shareWhatsApp() {
+      const text = document.getElementById("quote").innerText;
+      const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`;
+      window.open(whatsappUrl, "_blank");
+    }
+
+    function shareInstagram() {
+      const text = document.getElementById("quote").innerText;
+      navigator.clipboard.writeText(text).then(() => {
+        alert("Quote copied ✅\nOpen Instagram and paste into your story or caption!");
+        window.open("https://www.instagram.com/", "_blank");
+      });
+    }
+
+    function downloadImage() {
+      const container = document.getElementById("quote-container");
+      html2canvas(container).then(canvas => {
+        const link = document.createElement("a");
+        link.download = "quote.png";
+        link.href = canvas.toDataURL();
+        link.click();
+      });
+    }
+  </script>
+</body>
+</html>
